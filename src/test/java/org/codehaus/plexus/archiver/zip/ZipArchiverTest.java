@@ -24,6 +24,25 @@ package org.codehaus.plexus.archiver.zip;
  * SOFTWARE.
  */
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+import javax.annotation.Nonnull;
+
 import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
@@ -49,21 +68,6 @@ import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.Os;
-
-import javax.annotation.Nonnull;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 /**
  * @author Emmanuel Venisse
@@ -669,5 +673,32 @@ public class ZipArchiverTest
         zipArchiver.setEncoding( "UTF-8" );
         zipArchiver.addDirectory( new File( "src/test/resources/miscUtf8" ) );
         zipArchiver.createArchive();
+    }
+    
+    public void testUpdate()
+        throws Exception
+    {
+        File file = new File( "target/output/update.zip" );
+        FileUtils.copyFile( new File( "src/test/resources/test.zip" ), file );
+        
+        final ZipArchiver zipArchiver = getZipArchiver( file );
+        zipArchiver.setUpdateMode( true );
+        zipArchiver.addDirectory( new File( "src/test/resources/folders" ) );
+        
+        zipArchiver.createArchive();
+        
+        ZipInputStream zis = new ZipInputStream( new FileInputStream( file ) );
+
+        List<String> zipEntryNames = new ArrayList<String>();
+        ZipEntry entry;
+        while( ( entry = zis.getNextEntry() ) != null )
+        {
+            zipEntryNames.add( entry.getName() );
+        }
+        
+        assertTrue( "Missing entry from src/test/resources/folders", zipEntryNames.contains( "a/FileInA.txt" ) );
+        assertTrue( "Missing entry from src/test/resources/test.zip",
+                    zipEntryNames.contains( "Users/kristian/lsrc/plexus/plexus-archiver/src/main/java/"
+                        + "org/codehaus/plexus/archiver/zip/ZipArchiver.java" ) );
     }
 }

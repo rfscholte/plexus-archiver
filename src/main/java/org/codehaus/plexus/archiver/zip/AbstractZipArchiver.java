@@ -31,9 +31,12 @@ import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.ResourceIterator;
 import org.codehaus.plexus.archiver.UnixStat;
+import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.ResourceUtils;
 import org.codehaus.plexus.components.io.functions.SymlinkDestinationSupplier;
+import org.codehaus.plexus.components.io.resources.PlexusIoArchivedResourceCollection;
 import org.codehaus.plexus.components.io.resources.PlexusIoResource;
+import org.codehaus.plexus.components.io.resources.PlexusIoResourceCollection;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 
@@ -229,8 +232,7 @@ public abstract class AbstractZipArchiver
             setDuplicateBehavior( duplicate );
         }
 
-        ResourceIterator iter = getResources();
-        if ( !iter.hasNext() && !hasVirtualFiles() )
+        if ( !getResources().hasNext() && !hasVirtualFiles() )
         {
             throw new ArchiverException( "You must set at least one file." );
         }
@@ -267,7 +269,8 @@ public abstract class AbstractZipArchiver
 
         if ( doUpdate )
         {
-            renamedFile = FileUtils.createTempFile( "zip", ".tmp", zipFile.getParentFile() );
+            // Use zip as extension, so the correct Archiver is selected by the ArchiveManager
+            renamedFile = FileUtils.createTempFile( "zip", ".tmp.zip", zipFile.getParentFile() );
             renamedFile.deleteOnExit();
 
             try
@@ -286,6 +289,13 @@ public abstract class AbstractZipArchiver
                 throw new ArchiverException( "Unable to rename old file (" + zipFile.getAbsolutePath()
                     + ") to temporary file", e );
             }
+
+            // Add original zip content the the resources
+            PlexusIoZipFileResourceCollection resourceCollection = new PlexusIoZipFileResourceCollection();
+            
+            resourceCollection.setFile( renamedFile );
+            
+            addResources( resourceCollection );
         }
 
         String action = doUpdate ? "Updating " : "Building ";
@@ -309,7 +319,7 @@ public abstract class AbstractZipArchiver
         initZipOutputStream( zOut );
 
         // Add the new files to the archive.
-        addResources( iter, zOut );
+        addResources( getResources(), zOut );
 
         // If we've been successful on an update, delete the
         // temporary file
