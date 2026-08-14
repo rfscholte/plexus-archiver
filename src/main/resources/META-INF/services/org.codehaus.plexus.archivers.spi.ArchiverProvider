@@ -1,0 +1,4 @@
+org.codehaus.plexus.archiver.bzip2.BZip2ArchiverProvider
+org.codehaus.plexus.archiver.ear.EarArchiverProvider
+org.codehaus.plexus.archiver.jar.JarArchiverProvider
+org.codehaus.plexus.archiver.jar.JarToolModularJarArchiverProvider
