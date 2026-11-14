@@ -33,13 +33,7 @@ final class DefaultDirectoryResourceScan implements ResourceScan.DirectoryScan {
 
 	DefaultFileSet toFileSet() {
 		DefaultFileSet fileSet = new DefaultFileSet(directory.toFile());
-
-		if (matcher instanceof DefaultPathPatternMatcher resourceMatcher) {
-			resourceMatcher.applyTo(fileSet);
-		} else {
-			fileSet.setFileSelectors(new FileSelector[] { FileSelectors.from(directory, matcher) });
-		}
-
+		fileSet.setFileSelectors(new FileSelector[] { FileSelectors.from(directory, matcher) });
 		return fileSet;
 	}
 

@@ -18,8 +18,6 @@
 package org.codehaus.plexus.archivers.provider;
 
 import org.codehaus.plexus.archiver.Archiver;
-import org.codehaus.plexus.archivers.config.ArchiverConfiguration;
-import org.codehaus.plexus.archivers.config.ArchiverConfigurer;
 
 /**
  * Service provider for a named archive format. Archivers are exposed only after their initial configuration has been
@@ -38,5 +36,5 @@ public sealed interface ArchiverProvider permits AbstractArchiverProvider {
      * @return the configured archiver
      * @since 5.0.0
      */
-    Archiver newArchiver(ArchiverConfiguration configuration);
+    Archiver newArchiver();
 }

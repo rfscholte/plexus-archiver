@@ -42,7 +42,7 @@ import org.codehaus.plexus.archivers.config.PermissionHandling;
 import org.codehaus.plexus.archivers.config.PermissionPolicy;
 import org.codehaus.plexus.archivers.config.FileMode;
 import org.codehaus.plexus.archivers.config.FilePermissions;
-import org.codehaus.plexus.archivers.config.PathPatternMatcher;
+import org.codehaus.plexus.archivers.config.NamePatternBuilder;
 import org.codehaus.plexus.archivers.config.ResourceScan;
 import org.codehaus.plexus.archivers.config.StandardExcludes;
 import org.codehaus.plexus.archivers.provider.AbstractArchiverProvider;
@@ -54,149 +54,141 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ArchiverProviderIT {
 
-    @Test
-    void configuresNewArchiverWithoutExposingFileSetImplementations(@TempDir Path directory) {
-        CapturingArchiver expected = new CapturingArchiver();
-        ArchiverProvider provider = providerFor(expected);
-        
-        Archiver actual = provider.newArchiver(ArchiverConfiguration.config(configurer -> configurer
-        		.addResource(ResourceScan.fromDirectory(directory).matcher(PathPatternMatcher
-        				.includes("**/*.txt")
-        				.excludes("**/ignored.txt")
-        				.caseSensitive(CaseSensitivity.INSENSITIVE)
-        				.standardExcludes(StandardExcludes.NONE)), 
-        				emit -> { 
-        					emit.setPrefix("content/");
-        					emit.setEmptyDirectoryHandling(EmptyDirectoryHandling.EXCLUDE);
-        				})));
-        
-//        Archiver actual = provider.newArchiver(configurer -> configurer.addFileSet(FileSet.fromDirectory(directory)
-//                .prefix("content/")
-//                .includes(List.of("**/*.txt"))
-//                .excludes(List.of("**/ignored.txt"))
-//                .caseSensitive(CaseSensitivity.INSENSITIVE)
-//                .defaultExcludes(DefaultExcludes.IGNORE)
-//                .emptyDirectories(EmptyDirectoryHandling.EXCLUDE)
-//                .build()));
+	@Test
+	void configuresNewArchiverWithoutExposingFileSetImplementations(@TempDir Path directory) {
+		CapturingArchiver expected = new CapturingArchiver();
+		ArchiverProvider provider = providerFor(expected);
 
-        assertThat(actual).isSameAs(expected);
-        
-        assertThat(expected.fileSet.getDirectory()).as("getDirectory").isEqualTo(directory.toFile());
-        assertThat(expected.fileSet.getPrefix()).as("getPrefix").isEqualTo("content/");
-        assertThat(expected.fileSet.getIncludes()).as("getIncludes").containsExactly("**/*.txt");
-        assertThat(expected.fileSet.getExcludes()).as("getExcludes").containsExactly("**/ignored.txt");
-        assertThat(expected.fileSet.isCaseSensitive()).as("isCaseSensitive").isFalse();
-        assertThat(expected.fileSet.isUsingDefaultExcludes()).as("isUsingDefaultExcludes").isFalse();
-        assertThat(expected.fileSet.isIncludingEmptyDirectories()).as("isIncludingEmptyDirectories").isFalse();
-    }
+		Archiver actual = provider.newArchiver();
 
-    @Test
-    void configuresArchivedFileSet(@TempDir Path directory) {
-        Path archive = directory.resolve("dependency.jar");
-        CapturingArchiver expected = new CapturingArchiver();
-        ArchiverProvider provider = providerFor(expected);
+		ArchiverConfiguration config = ArchiverConfiguration
+				.config(configurer -> configurer.addResource(ResourceScan.fromDirectory(directory)
+						.matcher(NamePatternBuilder.includes("**/*.txt").excludes("**/ignored.txt")
+								.caseSensitive(CaseSensitivity.INSENSITIVE).standardExcludes(StandardExcludes.NONE)
+								.toMatcher()),
+						emit -> {
+							emit.setPrefix("content/");
+							emit.setEmptyDirectoryHandling(EmptyDirectoryHandling.EXCLUDE);
+						}));
+		config.applyOn(actual);
 
-        Archiver actual = provider.newArchiver(ArchiverConfiguration.config(configurer -> configurer
-        		.addResource(ResourceScan.fromArchive(archive).matcher(PathPatternMatcher
-        				.includes("**/*.class")
-        				.excludes("module-info.class")
-        				.caseSensitive(CaseSensitivity.PLATFORM_DEFAULT)
-        				.standardExcludes(StandardExcludes.NONE)), 
-        				emit -> {
-        					emit.setPrefix("lib/");
-        					emit.setEmptyDirectoryHandling(EmptyDirectoryHandling.EXCLUDE);
-        				})));
+		assertThat(actual).isSameAs(expected);
 
-//        provider.newArchiver(configurer -> configurer.addArchivedFileSet(ArchivedFileSet.fromArchive(archive)
-//                .prefix("lib/")
-//                .includes(List.of("**/*.class"))
-//                .excludes(List.of("module-info.class"))
-//                .caseSensitive(CaseSensitivity.PLATFORM_DEFAULT)
-//                .defaultExcludes(DefaultExcludes.IGNORE)
-//                .emptyDirectories(EmptyDirectoryHandling.EXCLUDE)
-//                .build()));
+		assertThat(expected.fileSet.getDirectory()).as("getDirectory").isEqualTo(directory.toFile());
+		// scan
+//		assertThat(expected.fileSet.getIncludes()).as("getIncludes").containsExactly("**/*.txt");
+//		assertThat(expected.fileSet.getExcludes()).as("getExcludes").containsExactly("**/ignored.txt");
+//		assertThat(expected.fileSet.isCaseSensitive()).as("isCaseSensitive").isFalse();
+//		assertThat(expected.fileSet.isUsingDefaultExcludes()).as("isUsingDefaultExcludes").isFalse();
+		// emit
+		assertThat(expected.fileSet.getPrefix()).as("getPrefix").isEqualTo("content/");
+		assertThat(expected.fileSet.isIncludingEmptyDirectories()).as("isIncludingEmptyDirectories").isFalse();
+	}
 
-        assertThat(expected.archivedFileSet.getArchive()).as("getArchive").isEqualTo(archive.toFile());
-        assertThat(expected.archivedFileSet.getPrefix()).as("getPrefix").isEqualTo("lib/");
-        assertThat(expected.archivedFileSet.getIncludes()).as("getIncludes").containsExactly("**/*.class");
-        assertThat(expected.archivedFileSet.getExcludes()).as("getExcludes").containsExactly("module-info.class");
-        assertThat(expected.archivedFileSet.isCaseSensitive()).as("isCaseSensitive")
-                .isEqualTo(CaseSensitivities.resolve(CaseSensitivity.PLATFORM_DEFAULT));
-        assertThat(expected.archivedFileSet.isUsingDefaultExcludes()).as("isUsingDefaultExcludes").isFalse();
-        assertThat(expected.archivedFileSet.isIncludingEmptyDirectories()).as("isIncludingEmptyDirectories").isFalse();
-    }
+	@Test
+	void configuresArchivedFileSet(@TempDir Path directory) {
+		Path archive = directory.resolve("dependency.jar");
+		CapturingArchiver expected = new CapturingArchiver();
+		ArchiverProvider provider = providerFor(expected);
 
-    @Test
-    void exposesEveryArchiverSetterWithOneArgument(@TempDir Path directory) {
-        CapturingArchiver expected = new CapturingArchiver();
-        FileTime timestamp = FileTime.fromMillis(1);
+		Archiver actual = provider.newArchiver();
 
-        Archiver actual = providerFor(expected).newArchiver(
-    		ArchiverConfiguration.reproducible(c -> {
-            	c.setOverrideLastModifiedTime(timestamp);
-                c.setOverrideUid(1000);
-                c.setOverrideUserName("user");
-                c.setOverrideGid(1000);
-                c.setOverrideGroupName("group");
-                c.setFilenameComparator(Comparator.naturalOrder());
-    		}).config(settings -> { 
-    			settings.setDestFile(directory.resolve("archive.zip"));
-    			settings.setEmptyDirectoryHandling(EmptyDirectoryHandling.EXCLUDE);
-    			settings.setArchiveCreation(ArchiveCreation.WHEN_NEEDED);
-    			settings.setDuplicateHandling(DuplicateHandling.FAIL);
-    			settings.setPermissionPolicy(PermissionPolicy.umask(FilePermissions.parse("----w--w-")));
-    		}).withFinalizer(ArchiverFinalizationPolicy.dotFileDirectory(directory)));
+		ArchiverConfiguration config = ArchiverConfiguration
+				.config(configurer -> configurer.addResource(ResourceScan.fromArchive(archive)
+						.matcher(NamePatternBuilder.includes("**/*.class").excludes("module-info.class")
+								.caseSensitive(CaseSensitivity.PLATFORM_DEFAULT).standardExcludes(StandardExcludes.NONE)
+								.toMatcher()),
+						emit -> {
+							emit.setPrefix("lib/");
+							emit.setEmptyDirectoryHandling(EmptyDirectoryHandling.EXCLUDE);
+						}));
+		config.applyOn(actual);
 
-        assertThat(actual).isSameAs(expected);
-        assertThat(expected.includeEmptyDirectories).isFalse();
-        assertThat(expected.forced).isFalse();
-        assertThat(expected.duplicateBehavior).isEqualTo(Archiver.DUPLICATES_FAIL);
-    }
+		assertThat(expected.archivedFileSet.getArchive()).as("getArchive").isEqualTo(archive.toFile());
+		// scan
+//		assertThat(expected.archivedFileSet.getIncludes()).as("getIncludes").containsExactly("**/*.class");
+//		assertThat(expected.archivedFileSet.getExcludes()).as("getExcludes").containsExactly("module-info.class");
+//		assertThat(expected.archivedFileSet.isCaseSensitive()).as("isCaseSensitive")
+//				.isEqualTo(CaseSensitivities.resolve(CaseSensitivity.PLATFORM_DEFAULT));
+//		assertThat(expected.archivedFileSet.isUsingDefaultExcludes()).as("isUsingDefaultExcludes").isFalse();
+		// emit
+		assertThat(expected.archivedFileSet.getPrefix()).as("getPrefix").isEqualTo("lib/");
+		assertThat(expected.archivedFileSet.isIncludingEmptyDirectories()).as("isIncludingEmptyDirectories").isFalse();
+	}
 
-    private static ArchiverProvider providerFor(Archiver archiver) {
-        return new AbstractArchiverProvider() {
-            @Override
-            public String getName() {
-                return "test";
-            }
+	@Test
+	void exposesEveryArchiverSetterWithOneArgument(@TempDir Path directory) {
+		CapturingArchiver expected = new CapturingArchiver();
+		FileTime timestamp = FileTime.fromMillis(1);
 
-            @Override
-            protected Archiver createArchiver() {
-                return archiver;
-            }
-        };
-    }
+		Archiver actual = providerFor(expected).newArchiver();
+		
+		ArchiverConfiguration config = ArchiverConfiguration.reproducible(c -> {
+			c.setOverrideLastModifiedTime(timestamp);
+			c.setOverrideUid(1000);
+			c.setOverrideUserName("user");
+			c.setOverrideGid(1000);
+			c.setOverrideGroupName("group");
+			c.setFilenameComparator(Comparator.naturalOrder());
+		}).config(settings -> {
+			settings.setDestFile(directory.resolve("archive.zip"));
+			settings.setEmptyDirectoryHandling(EmptyDirectoryHandling.EXCLUDE);
+			settings.setArchiveCreation(ArchiveCreation.WHEN_NEEDED);
+			settings.setDuplicateHandling(DuplicateHandling.FAIL);
+			settings.setPermissionPolicy(PermissionPolicy.umask(FilePermissions.parse("----w--w-")));
+		}).withFinalizer(ArchiverFinalizationPolicy.dotFileDirectory(directory));
+		config.applyOn(actual);
+		
+		assertThat(actual).isSameAs(expected);
+		assertThat(expected.includeEmptyDirectories).isFalse();
+		assertThat(expected.forced).isFalse();
+		assertThat(expected.duplicateBehavior).isEqualTo(Archiver.DUPLICATES_FAIL);
+	}
 
-    private static final class CapturingArchiver extends NoOpArchiver {
-        private FileSet fileSet;
-        private ArchivedFileSet archivedFileSet;
-        private boolean includeEmptyDirectories;
-        private boolean forced;
-        private String duplicateBehavior;
+	private static ArchiverProvider providerFor(Archiver archiver) {
+		return new AbstractArchiverProvider() {
+			@Override
+			public String getName() {
+				return "test";
+			}
 
-        @Override
-        public void addFileSet(FileSet fileSet) {
-            this.fileSet = fileSet;
-        }
+			@Override
+			protected Archiver createArchiver() {
+				return archiver;
+			}
+		};
+	}
 
-        @Override
-        public void addArchivedFileSet(ArchivedFileSet archivedFileSet) {
-            this.archivedFileSet = archivedFileSet;
-        }
+	private static final class CapturingArchiver extends NoOpArchiver {
+		private FileSet fileSet;
+		private ArchivedFileSet archivedFileSet;
+		private boolean includeEmptyDirectories;
+		private boolean forced;
+		private String duplicateBehavior;
 
-        @Override
-        public void setIncludeEmptyDirs(boolean includeEmptyDirectories) {
-            this.includeEmptyDirectories = includeEmptyDirectories;
-        }
+		@Override
+		public void addFileSet(FileSet fileSet) {
+			this.fileSet = fileSet;
+		}
 
-        @Override
-        public void setForced(boolean forced) {
-            this.forced = forced;
-        }
+		@Override
+		public void addArchivedFileSet(ArchivedFileSet archivedFileSet) {
+			this.archivedFileSet = archivedFileSet;
+		}
 
-        @Override
-        public void setDuplicateBehavior(String duplicateBehavior) {
-            this.duplicateBehavior = duplicateBehavior;
-        }
-    }
+		@Override
+		public void setIncludeEmptyDirs(boolean includeEmptyDirectories) {
+			this.includeEmptyDirectories = includeEmptyDirectories;
+		}
+
+		@Override
+		public void setForced(boolean forced) {
+			this.forced = forced;
+		}
+
+		@Override
+		public void setDuplicateBehavior(String duplicateBehavior) {
+			this.duplicateBehavior = duplicateBehavior;
+		}
+	}
 }

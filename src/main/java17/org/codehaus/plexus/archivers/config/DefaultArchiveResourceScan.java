@@ -4,11 +4,12 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
+import org.codehaus.plexus.components.io.fileselectors.FileSelector;
 
 final class DefaultArchiveResourceScan implements ResourceScan.ArchiveScan {
 
 	private final Path archive;
-	private ArchiveEntryMatcher matcher;
+	private ArchiveEntryMatcher matcher = entry -> true;
 
 	DefaultArchiveResourceScan(Path archive) {
 		this.archive = Objects.requireNonNull(archive, "archive");
@@ -32,11 +33,13 @@ final class DefaultArchiveResourceScan implements ResourceScan.ArchiveScan {
 	DefaultArchivedFileSet toArchivedFileSet() {
 		DefaultArchivedFileSet fileSet = new DefaultArchivedFileSet(archive.toFile());
 
-		if (matcher instanceof DefaultPathPatternMatcher resourceMatcher) {
-			resourceMatcher.applyTo(fileSet);
-		} else {
-			throw new UnsupportedOperationException();
-		}
+		// Exclusions are evaluated by the matcher, including any standard exclusions.
+		// Disable legacy exclusions so they cannot override the matcher's result.
+		fileSet.usingDefaultExcludes(false);
+
+		ArchiveEntryMatcher entryMatcher = matcher;
+		fileSet.setFileSelectors(
+				new FileSelector[] { fileInfo -> entryMatcher.matches(new FileInfoArchiveEntry(fileInfo)) });
 
 		return fileSet;
 	}

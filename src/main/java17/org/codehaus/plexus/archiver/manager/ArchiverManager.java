@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import org.codehaus.plexus.archiver.ArchiveCreator;
+import org.codehaus.plexus.archiver.ArchiveExtractor;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archivers.config.ArchiverConfiguration;
@@ -101,14 +103,16 @@ public interface ArchiverManager {
 	 * @since 5.0.0
 	 */
 	@Nonnull
-	default Archiver createArchiver(@Nonnull Path destFile, ArchiverConfiguration configuration)
+	default ArchiveCreator createArchiver(ArchiverConfiguration configuration)
 			throws NoSuchArchiverException {
-		Objects.requireNonNull(destFile, "destFile");
 		Objects.requireNonNull(configuration, "configuration");
 
-		String format = FileNames.getFileExtension(destFile);
+		return destFile ->  {
+			Objects.requireNonNull(destFile, "destFile");
+			String format = FileNames.getFileExtension(destFile);
 
-		return getArchiverFactory(format).create(destFile, configuration);
+			getArchiverFactory(format).create(destFile, configuration).createArchive();
+		};
 	}
 
 	/**
@@ -117,13 +121,15 @@ public interface ArchiverManager {
 	 * @since 5.0.0
 	 */
 	@Nonnull
-	default UnArchiver createUnArchiver(@Nonnull Path srcFile, UnArchiverConfiguration configuration)
+	default ArchiveExtractor createUnArchiver(UnArchiverConfiguration configuration)
 			throws NoSuchArchiverException {
-		Objects.requireNonNull(srcFile, "srcFile");
 		Objects.requireNonNull(configuration, "configuration");
 
-		String format = FileNames.getFileExtension(srcFile);
+		return srcFile -> {
+			Objects.requireNonNull(srcFile, "srcFile");
+			String format = FileNames.getFileExtension(srcFile);
 
-		return getUnArchiverFactory(format).create(srcFile, configuration);
+			getUnArchiverFactory(format).create(srcFile, configuration).extract();
+		};
 	}
 }

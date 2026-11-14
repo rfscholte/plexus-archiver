@@ -41,12 +41,14 @@
 package org.codehaus.plexus.archiver.manager;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.codehaus.plexus.archiver.ArchiveExtractor;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
@@ -209,25 +211,6 @@ class ServiceLoaderArchiverManagerIT {
     }
 
     @Test
-    void configuredLookups(@TempDir Path tempDirectory) throws Exception {
-        ArchiverManager manager = new ServiceLoaderArchiverManager();
-        Path archiveFile = tempDirectory.resolve("archive.zip");
-        Path outputDirectory = tempDirectory.resolve("output");
-
-        ArchiverFactory archiverFactory = manager.getArchiverFactory("zip");
-        Archiver archiver = archiverFactory.create(archiveFile, ArchiverConfiguration.config(c->{}));
-        Archiver secondArchiver = archiverFactory.create(archiveFile, ArchiverConfiguration.config(c->{}));
-        UnArchiver unarchiver = manager.createUnArchiver(archiveFile, UnArchiverConfiguration.config(configurer ->
-            configurer.setDestinationDirectory(outputDirectory)
-        ));
-
-        assertThat(archiver.getDestFile()).isEqualTo(archiveFile.toFile());
-        assertThat(secondArchiver).isNotSameAs(archiver);
-        assertThat(unarchiver.getSourceFile()).isEqualTo(archiveFile.toFile());
-        assertThat(unarchiver.getDestDirectory()).isEqualTo(outputDirectory.toFile());
-    }
-
-    @Test
     void lookupUnknownArchiver() {
         ArchiverManager manager = new ServiceLoaderArchiverManager();
 
@@ -306,5 +289,24 @@ class ServiceLoaderArchiverManagerIT {
                 NoSuchArchiverException.class, () -> manager.getResourceCollection(new File(fileName)));
 
         assertThat(exception.getArchiver()).isEqualTo(fileExtension);
+    }
+    
+    @Test
+    void configuredArchiverAddsArchivedResourceWithoutContainer(@TempDir Path tempDirectory) throws Exception {
+        ArchiverManager manager = new ServiceLoaderArchiverManager();
+        Path sourceArchive = Path.of("src/test/resources/test.zip").toAbsolutePath();
+        Path repackagedArchive = tempDirectory.resolve("repacked.zip");
+
+        Archiver archiver = manager.getArchiverFactory("zip").create(
+                repackagedArchive,
+                ArchiverConfiguration.config(settings ->
+                        settings.addResource(ResourceScan.fromArchive(sourceArchive), emit -> {})));
+
+        archiver.createArchive();
+
+        try (ZipFile zipFile = new ZipFile(repackagedArchive.toFile())) {
+            assertThat(zipFile.stream().map(ZipEntry::getName))
+                    .anyMatch(name -> name.endsWith("ZipUnArchiver.java"));
+        }
     }
 }

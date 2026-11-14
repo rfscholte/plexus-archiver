@@ -22,7 +22,7 @@ class ServiceLoaderArchiverFactory implements ArchiverFactory {
 	
 	@Override
 	public Archiver create() {
-		Archiver archiver = provider.newArchiver(ArchiverConfiguration.config(c -> {}));
+		Archiver archiver = provider.newArchiver();
 
 		if(archiver instanceof AbstractArchiver aa) {
 			aa.setResourceCollectionRegistry(new DefaultResourceCollectionRegistry(resourceCollectionFactories));
@@ -32,12 +32,15 @@ class ServiceLoaderArchiverFactory implements ArchiverFactory {
 	
 	@Override
     public Archiver create(Path path, ArchiverConfiguration configuration) {
-		Archiver archiver = provider.newArchiver(configuration);
-		archiver.setDestFile(path.toFile());
+		Archiver archiver = provider.newArchiver();
 		
+		archiver.setDestFile(path.toFile());
 		if(archiver instanceof AbstractArchiver aa) {
 			aa.setResourceCollectionRegistry(new DefaultResourceCollectionRegistry(resourceCollectionFactories));
 		}
+		
+		configuration.applyOn(archiver);
+		
     	return archiver;
     }
 }
