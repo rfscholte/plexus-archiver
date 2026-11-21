@@ -24,8 +24,8 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.codehaus.plexus.archiver.ArchiveCreator;
-import org.codehaus.plexus.archiver.ArchiveExtractor;
+import org.codehaus.plexus.archivers.ArchiveCreator;
+import org.codehaus.plexus.archivers.ArchiveExtractor;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archivers.config.ArchiverConfiguration;
