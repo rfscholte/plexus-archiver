@@ -4,8 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.ZipFile;
 
-import org.codehaus.plexus.archiver.ArchiveCreator;
-import org.codehaus.plexus.archiver.ArchiveExtractor;
+import org.codehaus.plexus.archivers.ArchiveCreator;
+import org.codehaus.plexus.archivers.ArchiveExtractor;
 import org.codehaus.plexus.archivers.config.ArchiverConfiguration;
 import org.codehaus.plexus.archivers.config.ResourceScan;
 import org.codehaus.plexus.archivers.config.UnArchiverConfiguration;

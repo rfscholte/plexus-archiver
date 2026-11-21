@@ -1,4 +1,4 @@
-package org.codehaus.plexus.archiver;
+package org.codehaus.plexus.archivers;
 
 import java.nio.file.Path;
 
