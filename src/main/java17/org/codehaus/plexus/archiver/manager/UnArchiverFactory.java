@@ -17,9 +17,8 @@
 
 package org.codehaus.plexus.archiver.manager;
 
-import java.nio.file.Path;
-
 import org.codehaus.plexus.archiver.UnArchiver;
+import org.codehaus.plexus.archivers.ArchiveExtractor;
 import org.codehaus.plexus.archivers.config.UnArchiverConfiguration;
 
 /**
@@ -31,10 +30,13 @@ import org.codehaus.plexus.archivers.config.UnArchiverConfiguration;
 public interface UnArchiverFactory {
     UnArchiver create();
     
-    default UnArchiver create(Path path, UnArchiverConfiguration configuration) {
-        UnArchiver unArchiver =  create();
-        unArchiver.setSourceFile(path.toFile());
-        configuration.applyOn(unArchiver);
-        return unArchiver;
+    default ArchiveExtractor create(UnArchiverConfiguration configuration) {
+    	return path -> {
+            UnArchiver unArchiver =  create();
+            unArchiver.setSourceFile(path.toFile());
+            configuration.applyOn(unArchiver);
+
+            unArchiver.extract();
+    	};
     }
 }

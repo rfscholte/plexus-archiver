@@ -131,7 +131,9 @@ public interface ArchiverManager {
 			Objects.requireNonNull(srcFile, "srcFile");
 			String format = FileNames.getFileExtension(srcFile);
 
-			getUnArchiverFactory(format).create(srcFile, configuration).extract();
+			getUnArchiverFactory(format)
+				.create(configuration)
+				.extractArchive(srcFile);
 		};
 	}
 }

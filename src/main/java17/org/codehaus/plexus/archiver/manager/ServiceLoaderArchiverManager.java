@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.codehaus.plexus.archiver.Archiver;
+import org.codehaus.plexus.archivers.ArchiveExtractor;
 import org.codehaus.plexus.archivers.config.ArchiverConfigurer;
 import org.codehaus.plexus.archivers.config.ResourceEmitSettings;
 import org.codehaus.plexus.archivers.config.ResourceScan;
@@ -88,10 +89,12 @@ class ServiceLoaderArchiverManager extends AbstractArchiverManager {
 			}
 			
 			@Override
-		    public UnArchiver create(Path path, UnArchiverConfiguration configuration) {
-		    	UnArchiver unarchiver = provider.newUnArchiver(configuration);
-		    	unarchiver.setSourceFile(path.toFile());
-		    	return unarchiver;
+		    public ArchiveExtractor create(UnArchiverConfiguration configuration) {
+				return path -> {
+			    	UnArchiver unarchiver = provider.newUnArchiver(configuration);
+			    	unarchiver.setSourceFile(path.toFile());
+			    	unarchiver.extract();
+				};
 		    }
 		};
     } 
