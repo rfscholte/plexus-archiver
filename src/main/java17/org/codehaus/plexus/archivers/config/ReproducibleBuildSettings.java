@@ -19,8 +19,6 @@ package org.codehaus.plexus.archivers.config;
 import java.nio.file.attribute.FileTime;
 import java.util.Comparator;
 
-import org.codehaus.plexus.archiver.Archiver;
-
 /**
  * Reproducible build settings for archive creation.
  *
@@ -31,10 +29,6 @@ import org.codehaus.plexus.archiver.Archiver;
  * @since 5.0.0
  */
 public interface ReproducibleBuildSettings {
-
-    static ReproducibleBuildSettings of(Archiver archiver) {
-        return new DefaultReproducibleBuildSettings(archiver);
-    }
 
     /**
      * Sets the comparator used to sort filenames when scanning directories.

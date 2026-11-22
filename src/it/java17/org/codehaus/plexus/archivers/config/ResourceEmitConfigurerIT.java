@@ -34,7 +34,7 @@ class ResourceEmitConfigurerIT {
         Path archivePath = tempDir.resolve("archive.zip");
 
         Archiver archiver = new ZipArchiver();
-        ArchiverSettings settings = ArchiverSettings.of(archiver);
+        DefaultArchiverSettings settings = new DefaultArchiverSettings();
         settings.setDestFile(archivePath);
 
         settings.addResource(
@@ -45,6 +45,8 @@ class ResourceEmitConfigurerIT {
                 ResourceScan.fromDirectory(dir2),
                 emit -> emit.setPrefix("second/"));
 
+        settings.apply(archiver);
+        
         archiver.createArchive();
 
         try (ZipFile zip = new ZipFile(archivePath.toFile())) {
@@ -68,7 +70,7 @@ class ResourceEmitConfigurerIT {
         Path archivePath = tempDir.resolve("archive.zip");
 
         Archiver archiver = new ZipArchiver();
-        ArchiverSettings settings = ArchiverSettings.of(archiver);
+        DefaultArchiverSettings settings = new DefaultArchiverSettings();
         settings.setDestFile(archivePath);
 
         // First resource: include empty directories
@@ -87,6 +89,7 @@ class ResourceEmitConfigurerIT {
                     emit.setEmptyDirectoryHandling(EmptyDirectoryHandling.EXCLUDE);
                 });
 
+        settings.apply(archiver);
         archiver.createArchive();
 
         try (ZipFile zip = new ZipFile(archivePath.toFile())) {
@@ -118,7 +121,7 @@ class ResourceEmitConfigurerIT {
         Path archivePath = tempDir.resolve("archive.zip");
 
         Archiver archiver = new ZipArchiver();
-        ArchiverSettings settings = ArchiverSettings.of(archiver);
+        DefaultArchiverSettings settings = new DefaultArchiverSettings();
         settings.setDestFile(archivePath);
 
         settings.addResource(
@@ -133,6 +136,7 @@ class ResourceEmitConfigurerIT {
                 ResourceScan.fromDirectory(scripts),
                 emit -> emit.setPrefix("scripts/"));
 
+        settings.apply(archiver);
         archiver.createArchive();
 
         try (ZipFile zip = new ZipFile(archivePath.toFile())) {

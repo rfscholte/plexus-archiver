@@ -42,8 +42,11 @@ public interface ArchiverConfiguration {
      */
     static ConfiguredConfiguration config(ArchiverConfigurer configurer) {
         Objects.requireNonNull(configurer, "configurer");
-        return new ConfiguredConfigurationImpl(archiver ->
-                configurer.configure(ArchiverSettings.of(archiver)));
+        return new ConfiguredConfigurationImpl(archiver -> {
+        		DefaultArchiverSettings settings = new DefaultArchiverSettings();
+                configurer.configure(settings);
+                settings.apply(archiver);
+        });
     }
 
     /**
@@ -77,8 +80,13 @@ public interface ArchiverConfiguration {
         public ConfiguredConfiguration config(ArchiverConfigurer configurer) {
             Objects.requireNonNull(configurer, "configurer");
             return new ConfiguredConfigurationImpl(archiver -> {
-                reproducibleConfigurer.configure(ReproducibleBuildSettings.of(archiver));
-                configurer.configure(ArchiverSettings.of(archiver));
+            	DefaultReproducibleBuildSettings rbSettings = new DefaultReproducibleBuildSettings();
+                reproducibleConfigurer.configure(rbSettings);
+                rbSettings.apply(archiver);
+
+                DefaultArchiverSettings settings = new DefaultArchiverSettings();
+                configurer.configure(settings);
+                settings.apply(archiver);
             });
         }
     }

@@ -18,6 +18,7 @@ package org.codehaus.plexus.archivers.config;
 
 import java.nio.file.attribute.FileTime;
 import java.util.Comparator;
+import java.util.Optional;
 
 import org.codehaus.plexus.archiver.Archiver;
 
@@ -28,39 +29,50 @@ import org.codehaus.plexus.archiver.Archiver;
  */
 final class DefaultReproducibleBuildSettings implements ReproducibleBuildSettings {
 
-	private final Archiver archiver;
+	private Optional<Comparator<String>> filenameComparator = Optional.empty();
+	private Optional<Integer> overrideGid = Optional.empty();
+	private Optional<String> overrideGroupName = Optional.empty();
+	private Optional<FileTime> overrideLastModifiedTime = Optional.empty();
+	private Optional<Integer> overrideUid = Optional.empty();
+	private Optional<String> overrideUserName = Optional.empty();
 	
-	DefaultReproducibleBuildSettings(Archiver archiver) {
-		this.archiver = archiver;
+	@Override
+	public void setFilenameComparator(Comparator<String> filenameComparator) {
+		this.filenameComparator = Optional.of(filenameComparator);
+	}
+	
+	@Override
+	public void setOverrideGid(int gid) {
+		this.overrideGid = Optional.of(gid);
 	}
 
 	@Override
 	public void setOverrideLastModifiedTime(FileTime fileTime) {
-		archiver.configureReproducibleBuild(fileTime);
+		this.overrideLastModifiedTime = Optional.of(fileTime);
 	}
 
 	@Override
 	public void setOverrideUid(int uid) {
-		archiver.setOverrideUid(uid);
+		this.overrideUid = Optional.of(uid);
 	}
 
 	@Override
 	public void setOverrideUserName(String userName) {
-		archiver.setOverrideUserName(userName);
+		this.overrideUserName = Optional.of(userName);
 	}
 
-	@Override
-	public void setOverrideGid(int gid) {
-		archiver.setOverrideGid(gid);
-	}
 
 	@Override
 	public void setOverrideGroupName(String groupName) {
-		archiver.setOverrideGroupName(groupName);
+		this.overrideGroupName = Optional.of(groupName);
 	}
 
-	@Override
-	public void setFilenameComparator(Comparator<String> filenameComparator) {
-		archiver.setFilenameComparator(filenameComparator);
+	void apply(Archiver archiver) {
+		filenameComparator.ifPresent(archiver::setFilenameComparator);
+		overrideGid.ifPresent(archiver::setOverrideGid);
+		overrideGroupName.ifPresent(archiver::setOverrideGroupName);
+		overrideLastModifiedTime.ifPresent(archiver::configureReproducibleBuild);
+		overrideUid.ifPresent(archiver::setOverrideUid);
+		overrideUserName.ifPresent(archiver::setOverrideUserName);
 	}
 }

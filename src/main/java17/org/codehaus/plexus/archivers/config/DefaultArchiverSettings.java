@@ -18,20 +18,27 @@ package org.codehaus.plexus.archivers.config;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.codehaus.plexus.archiver.ArchivedFileSet;
 import org.codehaus.plexus.archiver.Archiver;
+import org.codehaus.plexus.archiver.BaseFileSet;
+import org.codehaus.plexus.archiver.FileSet;
 import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 
 final class DefaultArchiverSettings implements ArchiverSettings {
 
-    private final Archiver archiver;
-
-    DefaultArchiverSettings(Archiver archiver) {
-        this.archiver = Objects.requireNonNull(archiver, "archiver");
-    }
+	private List<BaseFileSet> baseFileSets = new ArrayList<BaseFileSet>();
+	private Optional<Path> destFile = Optional.empty();
+	private Optional<EmptyDirectoryHandling> emptyDirectoryHandling = Optional.empty(); 
+	private Optional<ArchiveCreation> archiveCreation = Optional.empty();
+	private Optional<DuplicateHandling> duplicateHandling = Optional.empty();
+	private Optional<PermissionPolicy> permissionPolicy = Optional.empty();
 
     @Override
     public void addResource(ResourceScan scan, Consumer<ResourceEmitSettings> emit) {
@@ -41,14 +48,14 @@ final class DefaultArchiverSettings implements ArchiverSettings {
         if (scan instanceof DefaultDirectoryResourceScan directoryScan) {
             DefaultFileSet fileSet = directoryScan.toFileSet();
             emit.accept(new FileSetResourceEmitSettings(fileSet));
-            archiver.addFileSet(fileSet);
+            baseFileSets.add(fileSet);
             return;
         }
 
         if (scan instanceof DefaultArchiveResourceScan archiveScan) {
             DefaultArchivedFileSet fileSet = archiveScan.toArchivedFileSet();
             emit.accept(new FileSetResourceEmitSettings(fileSet));
-            archiver.addArchivedFileSet(fileSet);
+            baseFileSets.add(fileSet);
             return;
         }
 
@@ -58,70 +65,49 @@ final class DefaultArchiverSettings implements ArchiverSettings {
 
     @Override
     public void setDestFile(Path destFile) {
-        archiver.setDestFile(Objects.requireNonNull(destFile, "destFile").toFile());
+    	this.destFile = Optional.of(destFile);
     }
 
     @Override
     public void setEmptyDirectoryHandling(EmptyDirectoryHandling handling) {
-        archiver.setIncludeEmptyDirs(Objects.requireNonNull(handling, "handling") == EmptyDirectoryHandling.INCLUDE);
+    	this.emptyDirectoryHandling = Optional.of(handling);
     }
 
     @Override
     public void setArchiveCreation(ArchiveCreation archiveCreation) {
-        archiver.setForced(Objects.requireNonNull(archiveCreation, "archiveCreation") == ArchiveCreation.ALWAYS);
+    	this.archiveCreation = Optional.of(archiveCreation);
     }
 
     @Override
     public void setDuplicateHandling(DuplicateHandling duplicateHandling) {
-        Objects.requireNonNull(duplicateHandling, "duplicateHandling");
-        String behavior = duplicateHandling == DuplicateHandling.ADD ? Archiver.DUPLICATES_ADD
-				: duplicateHandling == DuplicateHandling.PRESERVE ? Archiver.DUPLICATES_PRESERVE
-						: duplicateHandling == DuplicateHandling.SKIP ? Archiver.DUPLICATES_SKIP
-								: Archiver.DUPLICATES_FAIL;
-        archiver.setDuplicateBehavior(behavior);
+    	this.duplicateHandling = Optional.of(duplicateHandling);
     }
 
     @Override
     public void setPermissionPolicy(PermissionPolicy policy) {
-        Objects.requireNonNull(policy, "policy");
-
-        if (policy instanceof IgnorePermissionPolicy) {
-            applyIgnorePolicy();
-            return;
-        }
-        if (policy instanceof UmaskPermissionPolicy umaskPolicy) {
-            applyUmaskPolicy(umaskPolicy);
-            return;
-        }
-        if (policy instanceof EntryModesPermissionPolicy entryModesPolicy) {
-            applyEntryModesPolicy(entryModesPolicy);
-            return;
-        }
-
-        throw new IncompatibleClassChangeError(
-                "Unsupported PermissionPolicy implementation: " + policy.getClass().getName());
+    	this.permissionPolicy = Optional.of(policy);
     }
 
-    private void applyIgnorePolicy() {
+    private void applyIgnorePolicy(Archiver archiver) {
         archiver.setIgnorePermissions(true);
-        clearUmask();
-        resetModesToInherit();
+        clearUmask(archiver);
+        resetModesToInherit(archiver);
     }
 
-    private void applyUmaskPolicy(UmaskPermissionPolicy policy) {
+    private void applyUmaskPolicy(Archiver archiver, UmaskPermissionPolicy policy) {
         archiver.setIgnorePermissions(false);
         archiver.setUmask(toMode(policy.mask()));
-        resetModesToInherit();
+        resetModesToInherit(archiver);
     }
 
-    private void applyEntryModesPolicy(EntryModesPermissionPolicy policy) {
+    private void applyEntryModesPolicy(Archiver archiver, EntryModesPermissionPolicy policy) {
         archiver.setIgnorePermissions(false);
-        clearUmask();
-        applyFileMode(policy.files());
-        applyDirectoryMode(policy.directories());
+        clearUmask(archiver);
+        applyFileMode(archiver, policy.files());
+        applyDirectoryMode(archiver, policy.directories());
     }
 
-    private void applyFileMode(FileMode fileMode) {
+    private void applyFileMode(Archiver archiver,FileMode fileMode) {
         if (fileMode instanceof OverrideFileMode mode) {
             archiver.setFileMode(toMode(mode.permissions()));
             archiver.setDefaultFileMode(Archiver.DEFAULT_FILE_MODE);
@@ -141,7 +127,7 @@ final class DefaultArchiverSettings implements ArchiverSettings {
                 "Unsupported FileMode implementation: " + fileMode.getClass().getName());
     }
 
-    private void applyDirectoryMode(DirectoryMode directoryMode) {
+    private void applyDirectoryMode(Archiver archiver, DirectoryMode directoryMode) {
         if (directoryMode instanceof OverrideDirectoryMode mode) {
             archiver.setDirectoryMode(toMode(mode.permissions()));
             archiver.setDefaultDirectoryMode(Archiver.DEFAULT_DIR_MODE);
@@ -161,14 +147,15 @@ final class DefaultArchiverSettings implements ArchiverSettings {
                 "Unsupported DirectoryMode implementation: " + directoryMode.getClass().getName());
     }
 
-    private void resetModesToInherit() {
+
+    private void resetModesToInherit(Archiver archiver) {
         archiver.setFileMode(-1);
         archiver.setDefaultFileMode(Archiver.DEFAULT_FILE_MODE);
         archiver.setDirectoryMode(-1);
         archiver.setDefaultDirectoryMode(Archiver.DEFAULT_DIR_MODE);
     }
-
-    private void clearUmask() {
+    
+    private void clearUmask(Archiver archiver) {
         archiver.setUmask(-1);
     }
 
@@ -198,4 +185,41 @@ final class DefaultArchiverSettings implements ArchiverSettings {
         throw new IncompatibleClassChangeError(
                 "Unsupported FilePermissions implementation: " + filePermissions.getClass().getName());
     }
+    
+    void apply(Archiver archiver) {
+    	destFile.map(Path::toFile).ifPresent(archiver::setDestFile);
+    	emptyDirectoryHandling.ifPresent(h -> archiver.setIncludeEmptyDirs(h == EmptyDirectoryHandling.INCLUDE));
+    	archiveCreation.ifPresent(h -> archiver.setForced(h == ArchiveCreation.ALWAYS));
+    	duplicateHandling.ifPresent(h -> {
+            String behavior = h == DuplicateHandling.ADD ? Archiver.DUPLICATES_ADD
+    						: h == DuplicateHandling.PRESERVE ? Archiver.DUPLICATES_PRESERVE
+    						: h == DuplicateHandling.SKIP ? Archiver.DUPLICATES_SKIP
+							: Archiver.DUPLICATES_FAIL;
+            archiver.setDuplicateBehavior(behavior);
+    	});
+    	permissionPolicy.ifPresent(policy -> {
+            if (policy instanceof IgnorePermissionPolicy) {
+                applyIgnorePolicy(archiver);
+                return;
+            }
+            if (policy instanceof UmaskPermissionPolicy umaskPolicy) {
+                applyUmaskPolicy(archiver, umaskPolicy);
+                return;
+            }
+            if (policy instanceof EntryModesPermissionPolicy entryModesPolicy) {
+                applyEntryModesPolicy(archiver, entryModesPolicy);
+                return;
+            }
+    	});
+
+    	
+    	for(BaseFileSet baseFileSet : baseFileSets) {
+    		if(baseFileSet instanceof FileSet s) {
+    			archiver.addFileSet(s);
+    		} else if (baseFileSet instanceof ArchivedFileSet s) {
+    			archiver.addArchivedFileSet(s);
+    		}
+    	}
+    }
+    
 }

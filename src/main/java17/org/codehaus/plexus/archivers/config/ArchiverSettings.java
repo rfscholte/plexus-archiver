@@ -36,10 +36,6 @@ import org.codehaus.plexus.archiver.Archiver;
  */
 public interface ArchiverSettings {
 
-    static ArchiverSettings of(Archiver archiver) {
-        return new DefaultArchiverSettings(archiver);
-    }
-
     /**
      * Adds one source scan plus per-resource emit settings.
      *

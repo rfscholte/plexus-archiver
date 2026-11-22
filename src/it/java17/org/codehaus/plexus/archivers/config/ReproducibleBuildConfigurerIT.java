@@ -125,9 +125,10 @@ class ReproducibleBuildConfigurerIT {
         Path archivePath = tempDir.resolve("archive.zip");
 
         Archiver archiver = new ZipArchiver();
-        ArchiverSettings as = ArchiverSettings.of(archiver);
+        DefaultArchiverSettings as = new DefaultArchiverSettings();
         as.setDestFile(archivePath);
         as.addResource(ResourceScan.fromDirectory(sourceDir), emit -> {});
+        as.apply(archiver);
 
         archiver.createArchive();
 
