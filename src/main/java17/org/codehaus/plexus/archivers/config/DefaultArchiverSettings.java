@@ -90,19 +90,15 @@ final class DefaultArchiverSettings implements ArchiverSettings {
 
     private void applyIgnorePolicy(Archiver archiver) {
         archiver.setIgnorePermissions(true);
-        clearUmask(archiver);
-        resetModesToInherit(archiver);
+        archiver.setUmask(-1);
     }
 
     private void applyUmaskPolicy(Archiver archiver, UmaskPermissionPolicy policy) {
-        archiver.setIgnorePermissions(false);
-        archiver.setUmask(toMode(policy.mask()));
-        resetModesToInherit(archiver);
+    	archiver.setUmask(toMode(policy.mask()));
     }
 
     private void applyEntryModesPolicy(Archiver archiver, EntryModesPermissionPolicy policy) {
-        archiver.setIgnorePermissions(false);
-        clearUmask(archiver);
+    	archiver.setUmask(-1);
         applyFileMode(archiver, policy.files());
         applyDirectoryMode(archiver, policy.directories());
     }
@@ -110,53 +106,30 @@ final class DefaultArchiverSettings implements ArchiverSettings {
     private void applyFileMode(Archiver archiver,FileMode fileMode) {
         if (fileMode instanceof OverrideFileMode mode) {
             archiver.setFileMode(toMode(mode.permissions()));
-            archiver.setDefaultFileMode(Archiver.DEFAULT_FILE_MODE);
-            return;
         }
         if (fileMode instanceof FallbackFileMode mode) {
-            archiver.setFileMode(-1);
             archiver.setDefaultFileMode(toMode(mode.permissions()));
             return;
         }
-        if (fileMode instanceof InheritedFileMode) {
-            archiver.setFileMode(-1);
-            archiver.setDefaultFileMode(Archiver.DEFAULT_FILE_MODE);
-            return;
-        }
-        throw new IncompatibleClassChangeError(
+        if (!(fileMode instanceof InheritedFileMode)) {
+        	throw new IncompatibleClassChangeError(
                 "Unsupported FileMode implementation: " + fileMode.getClass().getName());
+        }
     }
 
     private void applyDirectoryMode(Archiver archiver, DirectoryMode directoryMode) {
         if (directoryMode instanceof OverrideDirectoryMode mode) {
             archiver.setDirectoryMode(toMode(mode.permissions()));
-            archiver.setDefaultDirectoryMode(Archiver.DEFAULT_DIR_MODE);
             return;
         }
         if (directoryMode instanceof FallbackDirectoryMode mode) {
-            archiver.setDirectoryMode(-1);
             archiver.setDefaultDirectoryMode(toMode(mode.permissions()));
             return;
         }
-        if (directoryMode instanceof InheritedDirectoryMode) {
-            archiver.setDirectoryMode(-1);
-            archiver.setDefaultDirectoryMode(Archiver.DEFAULT_DIR_MODE);
-            return;
+        if (!(directoryMode instanceof InheritedDirectoryMode)) {
+            throw new IncompatibleClassChangeError(
+                    "Unsupported DirectoryMode implementation: " + directoryMode.getClass().getName());
         }
-        throw new IncompatibleClassChangeError(
-                "Unsupported DirectoryMode implementation: " + directoryMode.getClass().getName());
-    }
-
-
-    private void resetModesToInherit(Archiver archiver) {
-        archiver.setFileMode(-1);
-        archiver.setDefaultFileMode(Archiver.DEFAULT_FILE_MODE);
-        archiver.setDirectoryMode(-1);
-        archiver.setDefaultDirectoryMode(Archiver.DEFAULT_DIR_MODE);
-    }
-    
-    private void clearUmask(Archiver archiver) {
-        archiver.setUmask(-1);
     }
 
     private static int toMode(FilePermissions filePermissions) {
