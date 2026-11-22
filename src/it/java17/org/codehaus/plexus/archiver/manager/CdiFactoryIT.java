@@ -20,7 +20,6 @@ package org.codehaus.plexus.archiver.manager;
 import java.nio.file.Path;
 
 import org.codehaus.plexus.archivers.config.ArchiverConfiguration;
-import org.codehaus.plexus.archivers.config.ResourceScan;
 import org.codehaus.plexus.archivers.config.UnArchiverConfiguration;
 import org.codehaus.plexus.archiver.zip.PlexusArchiverZipFileResourceCollection;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
@@ -31,18 +30,6 @@ import org.junit.jupiter.api.io.TempDir;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CdiFactoryIT {
-
-    @Test
-    void createsConfiguredArchivers(@TempDir Path directory) {
-        CdiArchiverFactory factory = new CdiArchiverFactory(ZipArchiver::new);
-
-        var first = factory.create(directory.resolve("first.zip"), ArchiverConfiguration.config(c->{}));
-        var second = factory.create(directory.resolve("second.zip"), ArchiverConfiguration.config(c->{}));
-
-        assertThat(first).isNotSameAs(second);
-        assertThat(first.getDestFile()).isEqualTo(directory.resolve("first.zip").toFile());
-        assertThat(second.getDestFile()).isEqualTo(directory.resolve("second.zip").toFile());
-    }
 
     @Test
     void createsConfiguredUnarchivers(@TempDir Path directory) {

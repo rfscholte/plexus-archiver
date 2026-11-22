@@ -297,12 +297,10 @@ class ServiceLoaderArchiverManagerIT {
         Path sourceArchive = Path.of("src/test/resources/test.zip").toAbsolutePath();
         Path repackagedArchive = tempDirectory.resolve("repacked.zip");
 
-        Archiver archiver = manager.getArchiverFactory("zip").create(
-                repackagedArchive,
+        manager.getArchiverFactory("zip").create(
                 ArchiverConfiguration.config(settings ->
-                        settings.addResource(ResourceScan.fromArchive(sourceArchive), emit -> {})));
-
-        archiver.createArchive();
+                        settings.addResource(ResourceScan.fromArchive(sourceArchive), emit -> {})))
+        		.createArchive(repackagedArchive);
 
         try (ZipFile zipFile = new ZipFile(repackagedArchive.toFile())) {
             assertThat(zipFile.stream().map(ZipEntry::getName))

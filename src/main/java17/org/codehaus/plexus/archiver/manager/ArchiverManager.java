@@ -111,7 +111,9 @@ public interface ArchiverManager {
 			Objects.requireNonNull(destFile, "destFile");
 			String format = FileNames.getFileExtension(destFile);
 
-			getArchiverFactory(format).create(destFile, configuration).createArchive();
+			getArchiverFactory(format)
+				.create(configuration)
+				.createArchive(destFile);
 		};
 	}
 

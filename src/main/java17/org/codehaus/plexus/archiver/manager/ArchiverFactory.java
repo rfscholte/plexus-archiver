@@ -20,6 +20,7 @@ package org.codehaus.plexus.archiver.manager;
 import java.nio.file.Path;
 
 import org.codehaus.plexus.archiver.Archiver;
+import org.codehaus.plexus.archivers.ArchiveCreator;
 import org.codehaus.plexus.archivers.config.ArchiverConfiguration;
 
 /**
@@ -65,12 +66,14 @@ public interface ArchiverFactory {
      * @throws UnsupportedOperationException if mutation methods are called
      * @since 5.0.0
      */
-    default Archiver create(Path path, ArchiverConfiguration configuration) {
-        Archiver archiver = create();
-        archiver.setDestFile(path.toFile());
+    default ArchiveCreator create(ArchiverConfiguration configuration) {
+    	return path -> {
+            Archiver archiver = create();
+            archiver.setDestFile(path.toFile());
 
-        configuration.applyOn(archiver);
+            configuration.applyOn(archiver);
 
-        return archiver;
+            archiver.createArchive();
+    	};
     }
 }

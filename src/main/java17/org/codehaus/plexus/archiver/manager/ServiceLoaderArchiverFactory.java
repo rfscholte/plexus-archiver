@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import org.codehaus.plexus.archiver.AbstractArchiver;
 import org.codehaus.plexus.archiver.Archiver;
+import org.codehaus.plexus.archivers.ArchiveCreator;
 import org.codehaus.plexus.archivers.config.ArchiverConfiguration;
 import org.codehaus.plexus.archivers.config.ArchiverConfigurer;;
 import org.codehaus.plexus.archivers.provider.ArchiverProvider;
@@ -31,16 +32,18 @@ class ServiceLoaderArchiverFactory implements ArchiverFactory {
 	}
 	
 	@Override
-    public Archiver create(Path path, ArchiverConfiguration configuration) {
+    public ArchiveCreator create(ArchiverConfiguration configuration) {
 		Archiver archiver = provider.newArchiver();
-		
-		archiver.setDestFile(path.toFile());
-		if(archiver instanceof AbstractArchiver aa) {
-			aa.setResourceCollectionRegistry(new DefaultResourceCollectionRegistry(resourceCollectionFactories));
-		}
-		
-		configuration.applyOn(archiver);
-		
-    	return archiver;
+
+    	return path -> {
+    		archiver.setDestFile(path.toFile());
+    		if(archiver instanceof AbstractArchiver aa) {
+    			aa.setResourceCollectionRegistry(new DefaultResourceCollectionRegistry(resourceCollectionFactories));
+    		}
+    		
+    		configuration.applyOn(archiver);
+    		
+    		archiver.createArchive();
+    	};
     }
 }
