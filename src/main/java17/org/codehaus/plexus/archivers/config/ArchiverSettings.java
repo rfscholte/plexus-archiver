@@ -19,8 +19,6 @@ package org.codehaus.plexus.archivers.config;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
-import org.codehaus.plexus.archiver.Archiver;
-
 /**
  * Settings for archive creation.
  *

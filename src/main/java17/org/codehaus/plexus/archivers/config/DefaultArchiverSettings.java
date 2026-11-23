@@ -28,6 +28,7 @@ import org.codehaus.plexus.archiver.ArchivedFileSet;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.BaseFileSet;
 import org.codehaus.plexus.archiver.FileSet;
+import org.codehaus.plexus.archiver.util.AbstractFileSet;
 import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 
@@ -45,22 +46,22 @@ final class DefaultArchiverSettings implements ArchiverSettings {
         Objects.requireNonNull(scan, "scan");
         Objects.requireNonNull(emit, "emit");
 
+        AbstractFileSet<?> fileSet;
         if (scan instanceof DefaultDirectoryResourceScan directoryScan) {
-            DefaultFileSet fileSet = directoryScan.toFileSet();
-            emit.accept(new FileSetResourceEmitSettings(fileSet));
-            baseFileSets.add(fileSet);
-            return;
+        	fileSet = directoryScan.toFileSet();
+        } else if (scan instanceof DefaultArchiveResourceScan archiveScan) {
+        	fileSet = archiveScan.toArchivedFileSet();
+        } else {
+            throw new IncompatibleClassChangeError(
+                    "Unsupported ResourceScan implementation: " + scan.getClass().getName());
         }
 
-        if (scan instanceof DefaultArchiveResourceScan archiveScan) {
-            DefaultArchivedFileSet fileSet = archiveScan.toArchivedFileSet();
-            emit.accept(new FileSetResourceEmitSettings(fileSet));
-            baseFileSets.add(fileSet);
-            return;
-        }
+        DefaultResourceEmitSettings resourceEmitSettings = new DefaultResourceEmitSettings();
+        emit.accept(resourceEmitSettings);
 
-        throw new IncompatibleClassChangeError(
-                "Unsupported ResourceScan implementation: " + scan.getClass().getName());
+        resourceEmitSettings.apply(fileSet);
+        baseFileSets.add(fileSet);
+
     }
 
     @Override
