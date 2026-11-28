@@ -44,13 +44,14 @@ class UnArchiverProviderIT {
 
         UnArchiver unarchiver = new ZipUnArchiverProvider().newUnArchiver(UnArchiverConfiguration.config(
         		configurer -> {
-            configurer.setSource(source);
             configurer.setDestinationDirectory(destination);
             configurer.setExistingFileHandling(ExistingFileHandling.KEEP_NEWER);
             configurer.setFileMappers(List.of());
             configurer.setFileSelectors(List.of());
             configurer.setPermissionHandling(PermissionHandling.IGNORE);
         }));
+        unarchiver.setSourceFile(source.toFile());
+
 
         assertThat(unarchiver.getSourceFile()).isEqualTo(source.toFile());
         assertThat(unarchiver.getDestDirectory()).isEqualTo(destination.toFile());

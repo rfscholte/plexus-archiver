@@ -38,11 +38,6 @@ final class DefaultUnArchiverSettings implements UnArchiverSettings {
     }
 
     @Override
-    public void setSource(Path source) {
-        unarchiver.setSourceFile(Objects.requireNonNull(source, "source").toFile());
-    }
-
-    @Override
     public void setDestinationDirectory(Path destinationDirectory) {
         unarchiver.setDestDirectory(Objects.requireNonNull(destinationDirectory, "destinationDirectory")
                 .toFile());

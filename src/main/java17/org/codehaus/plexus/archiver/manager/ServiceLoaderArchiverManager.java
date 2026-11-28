@@ -64,7 +64,7 @@ public class ServiceLoaderArchiverManager extends AbstractArchiverManager {
     }
 
     private static Map<String, UnArchiverFactory> unarchivers(ServiceLoader<UnArchiverProvider> serviceLoader) {
-        return StreamSupport.stream(ServiceLoader.load(UnArchiverProvider.class).spliterator(), false)
+        return StreamSupport.stream(serviceLoader.spliterator(), false)
                 .collect(Collectors.toMap(UnArchiverProvider::getName, ServiceLoaderArchiverManager::toUnArchiverFactory));
     }
 

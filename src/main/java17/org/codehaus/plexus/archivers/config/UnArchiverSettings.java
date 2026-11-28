@@ -12,8 +12,6 @@ public interface UnArchiverSettings {
 	static UnArchiverSettings of(UnArchiver unArchiver) {
 		return new DefaultUnArchiverSettings(unArchiver);
 	}
-	
-    void setSource(Path source);
 
     void setDestinationDirectory(Path destinationDirectory);
 
