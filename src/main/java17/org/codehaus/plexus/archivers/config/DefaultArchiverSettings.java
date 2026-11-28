@@ -65,11 +65,6 @@ final class DefaultArchiverSettings implements ArchiverSettings {
     }
 
     @Override
-    public void setDestFile(Path destFile) {
-    	this.destFile = Optional.of(destFile);
-    }
-
-    @Override
     public void setEmptyDirectoryHandling(EmptyDirectoryHandling handling) {
     	this.emptyDirectoryHandling = Optional.of(handling);
     }

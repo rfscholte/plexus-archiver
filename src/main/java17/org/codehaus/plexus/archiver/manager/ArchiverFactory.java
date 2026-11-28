@@ -17,8 +17,6 @@
 
 package org.codehaus.plexus.archiver.manager;
 
-import java.nio.file.Path;
-
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archivers.ArchiveCreator;
 import org.codehaus.plexus.archivers.config.ArchiverConfiguration;

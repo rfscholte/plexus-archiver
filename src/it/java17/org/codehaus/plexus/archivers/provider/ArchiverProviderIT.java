@@ -131,7 +131,6 @@ class ArchiverProviderIT {
 			c.setOverrideGroupName("group");
 			c.setFilenameComparator(Comparator.naturalOrder());
 		}).config(settings -> {
-			settings.setDestFile(directory.resolve("archive.zip"));
 			settings.setEmptyDirectoryHandling(EmptyDirectoryHandling.EXCLUDE);
 			settings.setArchiveCreation(ArchiveCreation.WHEN_NEEDED);
 			settings.setDuplicateHandling(DuplicateHandling.FAIL);

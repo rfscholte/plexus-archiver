@@ -6,6 +6,7 @@ import java.util.zip.ZipFile;
 
 import org.codehaus.plexus.archivers.ArchiveCreator;
 import org.codehaus.plexus.archivers.ArchiveExtractor;
+import org.codehaus.plexus.archivers.Archivers;
 import org.codehaus.plexus.archivers.config.ArchiverConfiguration;
 import org.codehaus.plexus.archivers.config.ResourceScan;
 import org.codehaus.plexus.archivers.config.UnArchiverConfiguration;
@@ -19,15 +20,13 @@ class ArchiverManagerIT {
 	@Test
 	void configuredLookupsCreateAndExtractArchive(@TempDir Path tempDirectory)
 	        throws Exception {
-	    ArchiverManager manager = ArchiverManagers.create();
-
 	    Path source = Files.createDirectory(tempDirectory.resolve("source"));
 	    Files.writeString(source.resolve("message.txt"), "hello");
 
 	    Path archive = tempDirectory.resolve("archive.zip");
 	    Path destination = Files.createDirectory(tempDirectory.resolve("extracted"));
 
-	    ArchiveCreator creator = manager.createArchiver(
+	    ArchiveCreator creator = Archivers.createArchiver(
 	            ArchiverConfiguration.config(settings -> {
 	                settings.addResource(
 	                        ResourceScan.fromDirectory(source),
@@ -40,7 +39,7 @@ class ArchiverManagerIT {
 	        assertThat(zip.getEntry("content/message.txt")).isNotNull();
 	    }
 
-	    ArchiveExtractor extractor = manager.createUnArchiver(
+	    ArchiveExtractor extractor = Archivers.createUnArchiver(
 	            UnArchiverConfiguration.config(settings -> {
 	                settings.setDestinationDirectory(destination);
 	            }));

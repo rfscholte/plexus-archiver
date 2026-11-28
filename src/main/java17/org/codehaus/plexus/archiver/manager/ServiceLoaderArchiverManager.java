@@ -38,21 +38,21 @@ import org.codehaus.plexus.archivers.provider.UnArchiverProvider;
 import org.codehaus.plexus.components.io.resources.PlexusIoArchivedResourceCollection;
 import org.codehaus.plexus.components.io.resources.PlexusIoResourceCollection;
 
-class ServiceLoaderArchiverManager extends AbstractArchiverManager {
+public class ServiceLoaderArchiverManager extends AbstractArchiverManager {
 
-    ServiceLoaderArchiverManager() {
+    public ServiceLoaderArchiverManager() {
         super(archivers(ServiceLoader.load(ArchiverProvider.class), plexusIoResourceCollections(ServiceLoader.load(PlexusIoResourceCollectionProvider.class))), 
         		unarchivers(ServiceLoader.load(UnArchiverProvider.class)), 
         		plexusIoResourceCollections(ServiceLoader.load(PlexusIoResourceCollectionProvider.class)));
     }
 
-    ServiceLoaderArchiverManager(ClassLoader classLoader) {
+    public ServiceLoaderArchiverManager(ClassLoader classLoader) {
         super(archivers(ServiceLoader.load(ArchiverProvider.class, classLoader), plexusIoResourceCollections(ServiceLoader.load(PlexusIoResourceCollectionProvider.class, classLoader))), 
         		unarchivers(ServiceLoader.load(UnArchiverProvider.class, classLoader)), 
         		plexusIoResourceCollections(ServiceLoader.load(PlexusIoResourceCollectionProvider.class, classLoader)));
 	}
 
-	ServiceLoaderArchiverManager(ModuleLayer moduleLayer) {
+	public ServiceLoaderArchiverManager(ModuleLayer moduleLayer) {
 		 super(archivers(ServiceLoader.load(moduleLayer, ArchiverProvider.class), plexusIoResourceCollections(ServiceLoader.load(moduleLayer, PlexusIoResourceCollectionProvider.class))), 
 	        		unarchivers(ServiceLoader.load(moduleLayer, UnArchiverProvider.class)), 
 	        		plexusIoResourceCollections(ServiceLoader.load(moduleLayer, PlexusIoResourceCollectionProvider.class)));

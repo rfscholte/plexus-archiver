@@ -35,7 +35,6 @@ class ResourceEmitConfigurerIT {
 
         Archiver archiver = new ZipArchiver();
         DefaultArchiverSettings settings = new DefaultArchiverSettings();
-        settings.setDestFile(archivePath);
 
         settings.addResource(
                 ResourceScan.fromDirectory(dir1),
@@ -47,6 +46,7 @@ class ResourceEmitConfigurerIT {
 
         settings.apply(archiver);
         
+        archiver.setDestFile(archivePath.toFile());
         archiver.createArchive();
 
         try (ZipFile zip = new ZipFile(archivePath.toFile())) {
@@ -71,7 +71,6 @@ class ResourceEmitConfigurerIT {
 
         Archiver archiver = new ZipArchiver();
         DefaultArchiverSettings settings = new DefaultArchiverSettings();
-        settings.setDestFile(archivePath);
 
         // First resource: include empty directories
         settings.addResource(
@@ -90,6 +89,8 @@ class ResourceEmitConfigurerIT {
                 });
 
         settings.apply(archiver);
+
+        archiver.setDestFile(archivePath.toFile());
         archiver.createArchive();
 
         try (ZipFile zip = new ZipFile(archivePath.toFile())) {
@@ -122,8 +123,6 @@ class ResourceEmitConfigurerIT {
 
         Archiver archiver = new ZipArchiver();
         DefaultArchiverSettings settings = new DefaultArchiverSettings();
-        settings.setDestFile(archivePath);
-
         settings.addResource(
                 ResourceScan.fromDirectory(data),
                 emit -> emit.setPrefix("data/"));
@@ -137,6 +136,8 @@ class ResourceEmitConfigurerIT {
                 emit -> emit.setPrefix("scripts/"));
 
         settings.apply(archiver);
+
+        archiver.setDestFile(archivePath.toFile());
         archiver.createArchive();
 
         try (ZipFile zip = new ZipFile(archivePath.toFile())) {

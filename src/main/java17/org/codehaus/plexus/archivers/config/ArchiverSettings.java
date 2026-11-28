@@ -16,7 +16,6 @@
  */
 package org.codehaus.plexus.archivers.config;
 
-import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /**
@@ -40,13 +39,6 @@ public interface ArchiverSettings {
      * <p>Repeatable.</p>
      */
     void addResource(ResourceScan scan, Consumer<ResourceEmitSettings> emit);
-
-    /**
-     * Destination archive file.
-     *
-     * <p>Single-valued; last call wins.</p>
-     */
-    void setDestFile(Path destFile);
 
     /**
      * Archive-wide default for empty directories.

@@ -8,12 +8,12 @@ import java.util.Locale;
 
 import org.codehaus.plexus.util.StringUtils;
 
-class FileNames {
+public class FileNames {
 
     private FileNames() {}
 
     @Nonnull
-    static String getFileExtension(@Nonnull Path path) {
+    public static String getFileExtension(@Nonnull Path path) {
         return getFileExtension(path.getFileName().toString());
     }
 

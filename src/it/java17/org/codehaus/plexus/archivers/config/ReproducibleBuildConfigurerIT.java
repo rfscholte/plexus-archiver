@@ -52,12 +52,12 @@ class ReproducibleBuildConfigurerIT {
         	        rb.setOverrideGroupName("root");
         		})
         		.config(as -> {
-        	        as.setDestFile(archivePath);
         	        as.addResource(ResourceScan.fromDirectory(sourceDir), emit -> emit.setPrefix("root/"));
         		});
         
         configuration.applyOn(archiver);
-        
+
+        archiver.setDestFile(archivePath.toFile());
         archiver.createArchive();
 
         try (ZipFile zip = new ZipFile(archivePath.toFile())) {
@@ -126,10 +126,10 @@ class ReproducibleBuildConfigurerIT {
 
         Archiver archiver = new ZipArchiver();
         DefaultArchiverSettings as = new DefaultArchiverSettings();
-        as.setDestFile(archivePath);
         as.addResource(ResourceScan.fromDirectory(sourceDir), emit -> {});
         as.apply(archiver);
 
+        archiver.setDestFile(archivePath.toFile());
         archiver.createArchive();
 
         try (ZipFile zip = new ZipFile(archivePath.toFile())) {
@@ -150,11 +150,11 @@ class ReproducibleBuildConfigurerIT {
                     rb.setOverrideGroupName("root");
         		})
         		.config(as -> {
-        	        as.setDestFile(archivePath);
         	        as.addResource(ResourceScan.fromDirectory(sourceDir), emit -> {});
         		});
         configuration.applyOn(archiver);
         
+        archiver.setDestFile(archivePath.toFile());
         archiver.createArchive();
     }
 
